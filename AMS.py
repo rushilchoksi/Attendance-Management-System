@@ -255,7 +255,7 @@ class mainScreen:
                         root.configure(highlightcolor="black")
                         root.iconbitmap("mainIcon.ico")
                         root.focus_force()
-                        cs = 'C:/Users/Rushil/Desktop/Python/Hackathon/' + fileName
+                        cs = 'C:/Users/Rushil/OneDrive/Desktop/Attendance Management System/' + fileName
                         with open(cs, newline="") as file:
                             reader = csv.reader(file)
                             r = 0
@@ -270,7 +270,7 @@ class mainScreen:
 
             def checkSheets():
                 import subprocess
-                subprocess.Popen(r'explorer /select,"C:\Users\Rushil\Desktop\Python\Hackathon\Attendance"')
+                subprocess.Popen(r'explorer /select,"C:\Users\Rushil\OneDrive\Desktop\Attendance Management System"')
 
             subjectScreen = tk.Tk()
             subjectScreen.iconbitmap("mainIcon.ico")
@@ -439,7 +439,7 @@ class mainScreen:
                     def createCSV():
                         import csv
                         cursor.execute("select * from " + dbTableName + ";")
-                        csvName='C:/Users/Rushil/Desktop/AMS/Attendance/Manually Attendance/' + dbTableName + '.csv'
+                        csvName='C:/Users/Rushil/OneDrive/Desktop/Attendance Management System/Attendance/' + dbTableName + '.csv'
                         with open(csvName, "w") as csvFile:
                             csvWriter = csv.writer(csvFile)
                             csvWriter.writerow([i[0] for i in cursor.description])  # write headers
@@ -465,7 +465,7 @@ class mainScreen:
 
                     def checkSheetsManual():
                         import subprocess
-                        subprocess.Popen(r'explorer /select,"C:\Users\Rushil\Desktop\Python\Hackathon\Attendance"')
+                        subprocess.Popen(r'explorer /select,"C:\Users\Rushil\OneDrive\Desktop\Attendance Management System\Attendance"')
 
                     self.studentIDManual = tk.Label(manualFill)
                     self.studentIDManual.place(relx=0.068, rely=0.344, height=35, width=203)
@@ -659,7 +659,7 @@ class mainScreen:
                         studentDetails.iconbitmap("mainIcon.ico")
                         studentDetails.configure(background="#1B1B1B")
                         studentDetails.focus_force()
-                        location = 'C:/Users/Rushil/Desktop/Python/Hackathon/StudentDetails.csv'
+                        location = 'C:/Users/Rushil/OneDrive/Desktop/Attendance Management System/StudentDetails.csv'
                         with open (location, newline="") as file:
                             reader = csv.reader(file)
                             r = 0
