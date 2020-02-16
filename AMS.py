@@ -10,10 +10,18 @@ import sys
 import cv2
 import csv
 import time
+import smtplib
+import mimetypes
 import datetime
 import numpy as np
 import pandas as pd
+from email import encoders
 from PIL import Image,ImageTk
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email.message import EmailMessage
+from tkinter.filedialog import askopenfilename
+from email.mime.multipart import MIMEMultipart
 
 try:
     import Tkinter as tk
@@ -113,10 +121,11 @@ class mainScreen:
                     cam.release()
                     cv2.destroyAllWindows()
                     ts = time.time()
-                    Date = datetime.datetime.fromtimestamp(ts).strftime("'%d/%m/%Y")
-                    Time = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
+                    ######################Check for errors below######################
+                    Date = datetime.datetime.fromtimestamp(ts).strftime("%d/%m/%Y")
+                    Time = datetime.datetime.fromtimestamp(ts).strftime("%H:%M:%S")
                     row = [ID, Name, Date, Time]
-                    with open("StudentDetails.csv", "a+") as csvFile:
+                    with open("C:\\Users\\Rushil\\OneDrive\\Desktop\\Attendance Management System\\StudentDetails.csv", "a+") as csvFile:
                         writer = csv.writer(csvFile, delimiter=',')
                         writer.writerow(row)
                         csvFile.close()
@@ -144,7 +153,6 @@ class mainScreen:
                 q = 'An error was encountered.'#Please make a folder named "TrainingImageLabel"'
                 self.Notification.configure(text=q, bg="#008000", width=64, font=('SF Pro Display', 16, 'bold'))
                 self.Notification.place(x=92, y=430)'''
-
             res = "Student has been trained by the software."
             self.Notification.configure(text=res, bg="#008000", width=64, font=('SF Pro Display', 16, 'bold'))
             self.Notification.place(x=92, y=430)
@@ -220,28 +228,27 @@ class mainScreen:
                             if key == 27:
                                 break
                         ts = time.time()
-                        date = datetime.datetime.fromtimestamp(ts).strftime('%d_%m_%Y')
+                        date = datetime.datetime.fromtimestamp(ts).strftime("%d_%m_%Y")
                         timeStamp = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
                         Hour, Minute, Second = timeStamp.split(":")
                         fileName = "Attendance/" + self.subjectEntry.get() + "_" + date + "_Time_" + Hour + "_" + Second + ".csv"
                         attendance = attendance.drop_duplicates(['ID'], keep = "first")
                         print (attendance)
+                        ######################Check for errors below######################
                         attendance.to_csv(fileName, index = False)
                         dateForDB = datetime.datetime.fromtimestamp(ts).strftime('%Y_%m_%d')
                         dbTableName = str(Subject + "_" + dateForDB + "_Time_" + Hour + "_" + Minute + "_" + Second)
-                        import pymysql.connections
+                        import mysql.connector
                         try:
-                            global cursor
-                            connection = pymysql.connect(host='localhost', user='root', password='root', database='rushil')
+                            connection = mysql.connector.connect(host='localhost', user='root', password='root', database='ams')
                             cursor = connection.cursor()
                         except Exception as e:
                             print (e)
                         sql = "CREATE TABLE " + dbTableName + """(SrNo INT NOT NULL AUTO_INCREMENT, ID varchar(100) NOT NULL, Name VARCHAR(50) NOT NULL, Date VARCHAR(20) NOT NULL, Time VARCHAR(20) NOT NULL, PRIMARY KEY (SrNo)); """
-                        insertData = "INSERT INTO " + dbTableName + " (SrNo, ID, Name, Date, Time) VALUES (0, %s, %s, %s, %s);"
-                        VALUES = (str(Id), str(aa), str(date), str(timeStamp))
+                        insertData = "INSERT INTO " + dbTableName + " (SrNo, ID, Name, Date, Time) VALUES (0, "+str(Id)+",  "+str(aa)+", "+str(date)+", "+str(timeStamp)+");"
                         try:
                             cursor.execute(sql)
-                            cursor.execute(insertData, VALUES)
+                            cursor.execute(insertData)
                         except Exception as ex:
                             print(ex)
 
@@ -268,9 +275,33 @@ class mainScreen:
                                 r += 1
                         root.mainloop()
 
-            def checkSheets():
-                import subprocess
-                subprocess.Popen(r'explorer /select,"C:\Users\Rushil\OneDrive\Desktop\Attendance Management System"')
+            def sendMail():
+                SubjectEntry = self.subjectEntry.get()
+                user = os.environ.get("adminUser")
+                passwd = os.environ.get("adminPassword")
+                fileCSV = askopenfilename()
+                msg = MIMEMultipart()
+                msg['Subject'] = "Attendance for subject: " + str(SubjectEntry)
+                msg['From'] = user
+                msg['To'] = 'rushil.rc@gmail.com'
+                msgContent = "Hi there,\n\nPlease find attached for attendance of " + str(SubjectEntry)
+                ctype, encoding = mimetypes.guess_type(fileCSV)
+                if ctype is None or encoding is not None:
+                    ctype = "application/octet-stream"
+                Content = MIMEText(msgContent,'plain')
+                maintype, subtype = ctype.split("/", 1)
+                fp = open(fileCSV,"rb")
+                attachment = MIMEBase(maintype, subtype)
+                attachment.set_payload(fp.read())
+                encoders.encode_base64(attachment)
+                attachment.add_header("Content-Disposition", "attachment", filename=fileCSV)
+                msg.attach(attachment)
+                msg.attach(Content)
+                with smtplib.SMTP_SSL('smtp.gmail.com',465) as smtp:
+                    smtp.login(user,passwd)
+                    smtp.send_message(msg)
+                    self.welcomeMessageAuto.focus_force()
+                    self.welcomeMessageAuto.configure(text="Mail sent to Admin")
 
             subjectScreen = tk.Tk()
             subjectScreen.iconbitmap("mainIcon.ico")
@@ -328,18 +359,18 @@ class mainScreen:
             self.fillAttendanceBtnAuto.configure(text='''Fill Attendance''')
             self.fillAttendanceBtnAuto.configure(command=fillAttendance)
 
-            self.checkSheetsBtn = tk.Button(subjectScreen)
-            self.checkSheetsBtn.place(relx=0.610, rely=0.769, height=38, width=148)
-            self.checkSheetsBtn.configure(activebackground="#ececec")
-            self.checkSheetsBtn.configure(activeforeground="#000000")
-            self.checkSheetsBtn.configure(background="#2E2E2E")
-            self.checkSheetsBtn.configure(disabledforeground="#a3a3a3")
-            self.checkSheetsBtn.configure(font="-family {SF Pro Display} -size 14 -weight bold")
-            self.checkSheetsBtn.configure(foreground="#FFFFFF")
-            self.checkSheetsBtn.configure(highlightbackground="#d9d9d9")
-            self.checkSheetsBtn.configure(highlightcolor="black")
-            self.checkSheetsBtn.configure(text='''Check Sheets''')
-            self.checkSheetsBtn.configure(command=checkSheets)
+            self.sendMailBtn = tk.Button(subjectScreen)
+            self.sendMailBtn.place(relx=0.610, rely=0.769, height=38, width=148)
+            self.sendMailBtn.configure(activebackground="#ececec")
+            self.sendMailBtn.configure(activeforeground="#000000")
+            self.sendMailBtn.configure(background="#2E2E2E")
+            self.sendMailBtn.configure(disabledforeground="#a3a3a3")
+            self.sendMailBtn.configure(font="-family {SF Pro Display} -size 14 -weight bold")
+            self.sendMailBtn.configure(foreground="#FFFFFF")
+            self.sendMailBtn.configure(highlightbackground="#d9d9d9")
+            self.sendMailBtn.configure(highlightcolor="black")
+            self.sendMailBtn.configure(text='''Send Mail''')
+            self.sendMailBtn.configure(command=sendMail)
 
             self.chooseSubject = tk.Message(subjectScreen)
             self.chooseSubject.place(relx=0.0, rely=0.062, relheight=0.194, relwidth=1.009)
@@ -373,21 +404,19 @@ class mainScreen:
                 global subEntryText
                 subEntryText = self.subjectEntry.get()
                 dbTableName = str(subEntryText + "_" + Date + "_Time_" + Hour + "_" + Minute + "_" + Second)
-                import pymysql.connections
+                import mysql.connector
                 try:
                     global cursor
-                    connection = pymysql.connect(host='localhost', user='root', password='root', database='rushil')
+                    connection = mysql.connector.connect(host='localhost', user='root', password='root', database='ams')
                     cursor = connection.cursor()
                 except Exception as e:
-                    print (e)
+                    print(e)
                 sql = "CREATE TABLE " + dbTableName + """(SrNo INT NOT NULL AUTO_INCREMENT, ID varchar(100) NOT NULL, Name VARCHAR(50) NOT NULL, Date VARCHAR(20) NOT NULL, Time VARCHAR(20) NOT NULL, PRIMARY KEY (SrNo)); """
-                #insertData = "INSERT INTO " + dbTableName + " (SrNo, ID, Name, Date, Time) VALUES (0, %s, %s, %s, %s);"
-                #VALUES = (str(Id), str(aa), str(date), str(timeStamp))
                 try:
                     cursor.execute(sql)
-                    #cursor.execute(insertData, VALUES)
-                except Exception as ex:
-                    print(ex)
+                except Exception as e:
+                    print(e)
+                    print("Add mysql.connector")
                 if subEntryText == "":
                     self.welcomeMessageSubject.configure(background="#800000")
                     self.welcomeMessageSubject.configure(foreground="#FFFFFF")
@@ -437,7 +466,7 @@ class mainScreen:
                             self.studentIDManualEntry.delete(first=0, last=20)
                             self.studentNameManualEntry.delete(first=0, last=20)
                     def createCSV():
-                        import csv
+                        import mysql.connector
                         cursor.execute("select * from " + dbTableName + ";")
                         csvName='C:/Users/Rushil/OneDrive/Desktop/Attendance Management System/Attendance/' + dbTableName + '.csv'
                         with open(csvName, "w") as csvFile:
