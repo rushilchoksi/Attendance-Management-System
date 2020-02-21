@@ -125,7 +125,7 @@ class mainScreen:
                     Date = datetime.datetime.fromtimestamp(ts).strftime("%d/%m/%Y")
                     Time = datetime.datetime.fromtimestamp(ts).strftime("%H:%M:%S")
                     row = [ID, Name, Date, Time]
-                    with open("C:\\Users\\Rushil\\OneDrive\\Desktop\\Attendance Management System\\StudentDetails.csv", "a+") as csvFile:
+                    with open("StudentDetails.csv", "a+") as csvFile:
                         writer = csv.writer(csvFile, delimiter=',')
                         writer.writerow(row)
                         csvFile.close()
@@ -678,8 +678,8 @@ class mainScreen:
             def administratorLogin():
                 UserName = self.adminUsernameEntry.get()
                 Password = self.adminPasswordEntry.get()
-                if UserName == "Rushil":
-                    if Password == "RushilPro":
+                if UserName == os.environ.get("panelUsername"):
+                    if Password == os.environ.get("panelPassword"):
                         self.loginMessage.configure(background="#008000")
                         self.loginMessage.configure(foreground="#FFFFFF")
                         self.loginMessage.configure(text='''Login Success!''')
